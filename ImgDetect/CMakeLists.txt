@@ -8,19 +8,26 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
 
-set(OpenCV_STATIC on)
 if(ANDROID)
-    set(OpenCV_DIR vendor/OpenCV-android-sdk/sdk/native/jni)
+    set(OpenCV_STATIC ON)
+    set(OpenCV_DIR vendor/opencvAndroid/sdk/native/jni)
+    set(OPENCV_ANDROID_PATH /home/andrew/MY/PWR/ProjektZespolowy/ProjektZespolowy/ImgDetect/vendor/opencvAndroid)
+
+    include_directories(${OPENCV_ANDROID_PATH}/sdk/native/jni/include)
+
+    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/libs/arm64-v8a)
+    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/3rdparty/libs/arm64-v8a)
+
+    find_package(OpenCV REQUIRED)
 else()
-    set(OpenCV_DIR vendor/opencv)
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    find_package(OpenCV REQUIRED)
 endif()
 
-find_package(OpenCV REQUIRED)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
@@ -28,6 +35,8 @@ set(PROJECT_SOURCES
         main.cpp
         mainwidget.cpp
         mainwidget.h
+        videocapture.cpp
+        videocapture.h
         mainwidget.ui
 )
 
@@ -56,6 +65,12 @@ endif()
 
 target_link_libraries(ImgDetect PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(ImgDetect PRIVATE ${OpenCV_LIBS})
+
+if(ANDROID)
+    set(ANDROID_EXTRA_LIBS
+        ${OPENCV_ANDROID_PATH}/sdk/native/libs/arm64-v8a/libopencv_java4.so
+    CACHE INTERNAL "")
+endif()
 
 set_target_properties(ImgDetect PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

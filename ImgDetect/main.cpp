@@ -7,7 +7,6 @@ int main(int argc, char *argv[])
     MainWidget w;
 
     QPalette pallete;
-
     pallete.setColor(QPalette::Window, Qt::gray);
 
     w.setAutoFillBackground(true);
