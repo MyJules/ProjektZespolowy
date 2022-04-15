@@ -1,10 +1,10 @@
 #include "mainwidget.h"
 #include "./ui_mainwidget.h"
 
-
 #include "QImage"
 #include <opencv2/opencv.hpp>
 #include <vector>
+
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent),
@@ -13,17 +13,16 @@ MainWidget::MainWidget(QWidget *parent)
 {
     m_ui->setupUi(this);
     setWindowTitle("ImgDetect");
+
     connect(m_videoCapture, &VideoCapture::newPixmapCaptured, this, [&](){
         m_ui->imageLabel->setPixmap(m_videoCapture->getPixmap().scaled(m_ui->imageLabel->width(), m_ui->imageLabel->height()));
     });
-    m_videoCapture->start(QThread::HighPriority);
 }
 
 MainWidget::~MainWidget()
 {
     delete m_ui;
-    m_videoCapture->terminate();
-    m_videoCapture->wait();
+    delete m_videoCapture;
 }
 
 void MainWidget::on_filterButton_clicked()

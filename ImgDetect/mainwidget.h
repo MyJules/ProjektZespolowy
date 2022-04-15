@@ -21,7 +21,6 @@ private slots:
     void on_filterButton_clicked();
     void on_filterButton1_clicked();
     void on_filterButton2_clicked();
-
     void on_resetButton_clicked();
 
 private:

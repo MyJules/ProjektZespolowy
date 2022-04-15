@@ -5,31 +5,38 @@
 
 #include <QThread>
 #include <QPixmap>
+#include <QCamera>
+#include <QImageCapture>
+#include <QMediaDevices>
+#include <QMediaCaptureSession>
+#include <QVideoSink>
+#include <QPointer>
 
 #include <functional>
 
-class VideoCapture : public QThread
+class VideoCapture : public QObject
 {
     Q_OBJECT
 
 public:
     VideoCapture(QObject *parent = nullptr, int cameraId = 0);
+    ~VideoCapture();
 
     QPixmap getPixmap() const;
-    QImage cvMatToQImage(const cv::Mat &inMat) const;
-    QPixmap cvMatToQPixmap(const cv::Mat &inMat) const;
     void setImageFilter(std::function<void(cv::Mat&)> lambda);
-
-protected:
-    void run() override;
+    static bool checkCameraAvailability();
 
 signals:
     void newPixmapCaptured();
 
+private slots:
+    void handleVideoFrames(const QVideoFrame &frame);
+
 private:
     QPixmap m_pixmap;
-    cv::Mat m_frame;
-    cv::VideoCapture m_videoCapture;
+    QCamera *m_camera;
+    QVideoSink *m_sink;
+    QMediaCaptureSession m_captureSession;
     std::function<void(cv::Mat&)> m_imageFilter;
 };
 

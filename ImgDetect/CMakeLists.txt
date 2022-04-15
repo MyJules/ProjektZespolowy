@@ -14,13 +14,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(ANDROID)
     set(OpenCV_STATIC ON)
-    set(OpenCV_DIR vendor/opencvAndroid/sdk/native/jni)
-    set(OPENCV_ANDROID_PATH /home/andrew/MY/PWR/ProjektZespolowy/ProjektZespolowy/ImgDetect/vendor/opencvAndroid)
+    set(OPENCV_ANDROID_PATH vendor/opencvAndroid)
+    set(OpenCV_DIR ${OPENCV_ANDROID_PATH}/sdk/native/jni)
+    set(ANDROID_ARCHITECTURE arm64-v8a)
 
     include_directories(${OPENCV_ANDROID_PATH}/sdk/native/jni/include)
 
-    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/libs/arm64-v8a)
-    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/3rdparty/libs/arm64-v8a)
+    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/libs/${ANDROID_ARCHITECTURE})
+    link_directories(${OPENCV_ANDROID_PATH}/sdk/native/3rdparty/libs/${ANDROID_ARCHITECTURE})
 
     find_package(OpenCV REQUIRED)
 else()
@@ -28,8 +29,8 @@ else()
     find_package(OpenCV REQUIRED)
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Multimedia REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Multimedia REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -37,6 +38,8 @@ set(PROJECT_SOURCES
         mainwidget.h
         videocapture.cpp
         videocapture.h
+        cvutils.cpp
+        cvutils.h
         mainwidget.ui
 )
 
@@ -63,12 +66,12 @@ else()
     endif()
 endif()
 
-target_link_libraries(ImgDetect PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ImgDetect PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
 target_link_libraries(ImgDetect PRIVATE ${OpenCV_LIBS})
 
 if(ANDROID)
     set(ANDROID_EXTRA_LIBS
-        ${OPENCV_ANDROID_PATH}/sdk/native/libs/arm64-v8a/libopencv_java4.so
+        ${OPENCV_ANDROID_PATH}/sdk/native/libs/${ANDROID_ARCHITECTURE}/libopencv_java4.so
     CACHE INTERNAL "")
 endif()
 
