@@ -14,8 +14,8 @@ MainWidget::MainWidget(QWidget *parent)
     m_ui->setupUi(this);
     setWindowTitle("ImgDetect");
 
-    connect(m_videoCapture, &VideoCapture::newPixmapCaptured, this, [&](){
-        m_ui->imageLabel->setPixmap(m_videoCapture->getPixmap().scaled(m_ui->imageLabel->width(), m_ui->imageLabel->height()));
+    connect(m_videoCapture, &VideoCapture::newPixmapCaptured, this, [&](const QPixmap &pixmap){
+        m_ui->imageLabel->setPixmap(pixmap.scaled(m_ui->imageLabel->width(), m_ui->imageLabel->height()));
     });
 }
 

@@ -6,11 +6,12 @@
 VideoCapture::VideoCapture(QObject *parent, int cameraId)
     : QObject(parent),
       m_imageFilter(nullptr),
-      m_camera(new QCamera(this)),
       m_sink(new QVideoSink(this))
 {
-    m_captureSession.setCamera(m_camera);
+    m_camera = new QCamera(QMediaDevices::defaultVideoInput());
+    m_captureSession.setCamera(m_camera.data());
     m_captureSession.setVideoSink(m_sink);
+    m_captureSession.
 
     connect(m_sink, &QVideoSink::videoFrameChanged, this, &VideoCapture::handleVideoFrames);
     m_camera->start();
@@ -19,11 +20,6 @@ VideoCapture::VideoCapture(QObject *parent, int cameraId)
 VideoCapture::~VideoCapture()
 {
     m_camera->stop();
-}
-
-QPixmap VideoCapture::getPixmap() const
-{
-    return m_pixmap;
 }
 
 void VideoCapture::setImageFilter(std::function<void(cv::Mat&)> lambda)
@@ -35,21 +31,12 @@ void VideoCapture::handleVideoFrames(const QVideoFrame &frame)
 {
     QImage image = frame.toImage();
     cv::Mat cvFrame = cvutils::QImageToCvMat(image);
+
     if(m_imageFilter != nullptr)
     {
       m_imageFilter(cvFrame);
     }
-    m_pixmap = cvutils::cvMatToQPixmap(cvFrame);
-    emit newPixmapCaptured();
-}
 
-bool VideoCapture::checkCameraAvailability()
-{
-    if(QMediaDevices::videoInputs().count() > 0)
-    {
-        return true;
-    }else
-    {
-        return false;
-    }
+    QPixmap pixmap = cvutils::cvMatToQPixmap(cvFrame);
+    emit newPixmapCaptured(pixmap);
 }

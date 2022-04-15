@@ -22,20 +22,18 @@ public:
     VideoCapture(QObject *parent = nullptr, int cameraId = 0);
     ~VideoCapture();
 
-    QPixmap getPixmap() const;
     void setImageFilter(std::function<void(cv::Mat&)> lambda);
-    static bool checkCameraAvailability();
 
 signals:
-    void newPixmapCaptured();
+    void newPixmapCaptured(const QPixmap &pixmap);
 
 private slots:
     void handleVideoFrames(const QVideoFrame &frame);
 
 private:
     QPixmap m_pixmap;
-    QCamera *m_camera;
     QVideoSink *m_sink;
+    QPointer<QCamera> m_camera;
     QMediaCaptureSession m_captureSession;
     std::function<void(cv::Mat&)> m_imageFilter;
 };
