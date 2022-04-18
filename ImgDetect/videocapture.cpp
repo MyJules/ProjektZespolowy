@@ -9,7 +9,7 @@ VideoCapture::VideoCapture(QObject *parent, int cameraId)
       m_sink(new QVideoSink(this))
 {
     m_camera = new QCamera(QMediaDevices::defaultVideoInput());
-    m_captureSession.setCamera(m_camera.data());
+    m_captureSession.setCamera(m_camera);
     m_captureSession.setVideoSink(m_sink);
     m_captureSession.
 
@@ -20,6 +20,7 @@ VideoCapture::VideoCapture(QObject *parent, int cameraId)
 VideoCapture::~VideoCapture()
 {
     m_camera->stop();
+    delete m_camera;
 }
 
 void VideoCapture::setImageFilter(std::function<void(cv::Mat&)> lambda)
@@ -29,8 +30,7 @@ void VideoCapture::setImageFilter(std::function<void(cv::Mat&)> lambda)
 
 void VideoCapture::handleVideoFrames(const QVideoFrame &frame)
 {
-    QImage image = frame.toImage();
-    cv::Mat cvFrame = cvutils::QImageToCvMat(image);
+    cv::Mat cvFrame = cvutils::QImageToCvMat(frame.toImage());
 
     if(m_imageFilter != nullptr)
     {

@@ -33,7 +33,7 @@ private slots:
 private:
     QPixmap m_pixmap;
     QVideoSink *m_sink;
-    QPointer<QCamera> m_camera;
+    QCamera *m_camera;
     QMediaCaptureSession m_captureSession;
     std::function<void(cv::Mat&)> m_imageFilter;
 };
