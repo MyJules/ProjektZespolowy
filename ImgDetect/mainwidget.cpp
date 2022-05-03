@@ -1,70 +1,113 @@
 #include "mainwidget.h"
 #include "./ui_mainwidget.h"
 
-#include "QImage"
 #include <opencv2/opencv.hpp>
-#include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d.hpp>
 
+#include <QElapsedTimer>
+#include <QVideoWidget>
+#include <QImage>
+#include <QDebug>
+
+#include <vector>
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent),
-      m_ui(new Ui::MainWidget),
-      m_videoCapture(new VideoCapture(this))
+      m_ui(new Ui::MainWidget)
 {
     m_ui->setupUi(this);
+    m_ui->videoOutput->setScaledContents(true);
     setWindowTitle("ImgDetect");
+    m_b = true;
+    connect(&m_videoCapture, &VideoCapture::newPixmapCaptured, this, &MainWidget::onPixmapChanged);
 
-    connect(m_videoCapture, &VideoCapture::newPixmapCaptured, this, [&](const QPixmap &pixmap){
-        m_ui->imageLabel->setPixmap(pixmap.scaled(m_ui->imageLabel->width(), m_ui->imageLabel->height()));
-    });
+    m_ui->algorythmWorkTime->setText("0 ms");
 }
 
 MainWidget::~MainWidget()
 {
     delete m_ui;
-    delete m_videoCapture;
 }
 
-void MainWidget::on_filterButton_clicked()
+void MainWidget::onPixmapChanged(QPixmap pixmap)
 {
-    m_videoCapture->setImageFilter([](cv::Mat& frame){
-        cv::Mat img_gray;
-        cvtColor(frame, img_gray, cv::COLOR_BGR2GRAY);
-        cv::Mat thresh;
-        threshold(img_gray, thresh, 150, 255, cv::THRESH_BINARY);
+    m_ui->videoOutput->setPixmap(pixmap.scaled(1280, 720, Qt::KeepAspectRatio, Qt::FastTransformation));
+}
 
-        std::vector<std::vector<cv::Point>> contours;
-        std::vector<cv::Vec4i> hierarchy;
-        findContours(thresh, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+void MainWidget::on_trackFeaturePointButton_clicked()
+{
+    m_videoCapture.setImageFilter([this](cv::Mat &currentFrame, cv::Mat &previousFrame)
+    {
+        QElapsedTimer timer;
+        timer.start();
 
-        cv::Mat image_copy = frame.clone();
-        drawContours(frame, contours, -1, cv::Scalar(0, 255, 0), 2);
+        if(m_b)
+        {
+            m_b = false;
+            m_img = previousFrame.clone();
+        }
+
+        cv::Mat img_1 = m_img.clone();
+        cv::Mat img_2 = currentFrame.clone();
+
+        auto sift = cv::SIFT::create();
+        std::vector<cv::KeyPoint> keypoint1, keypoint2;
+
+        cv::Mat descriptor1, descriptor2;
+        auto detector = cv::ORB::create();
+        auto descriptor = cv::ORB::create();
+
+        auto matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+        detector->detect(img_1, keypoint1);
+        detector->detect(img_2, keypoint2);
+
+        descriptor->compute(img_1, keypoint1, descriptor1);
+        descriptor->compute(img_2, keypoint2, descriptor2);
+
+        cv::drawKeypoints(previousFrame, keypoint1, currentFrame, cv::Scalar::all(-1), cv::DrawMatchesFlags::DEFAULT);
+
+        std::vector<cv::DMatch> matches;
+
+        matcher->match(descriptor1, descriptor2, matches);
+
+        double min_dist = 10000, max_dist = 0;
+
+        for ( int i = 0; i < descriptor1.rows; i++ )
+        {
+            double dist = matches[i].distance;
+            if ( dist < min_dist ) min_dist = dist;
+            if ( dist > max_dist ) max_dist = dist;
+        }
+
+        std::vector< cv::DMatch > good_matches;
+
+        for ( int i = 0; i < descriptor1.rows; i++ )
+        {
+            if ( matches[i].distance <= std::max ( 2*min_dist, 20.0 ) )
+            {
+                good_matches.push_back ( matches[i] );
+            }
+        }
+
+        cv::Mat img_match;
+        cv::Mat img_goodmatch;
+        //drawMatches ( img_1, keypoint1, img_2, keypoint2, matches, currentFrame );
+        drawMatches ( img_1, keypoint1, img_2, keypoint2, good_matches, currentFrame );
+
+
+        m_ui->algorythmWorkTime->setText(QString::number(timer.elapsed()) + " ms");
     });
 }
-
-
-void MainWidget::on_filterButton1_clicked()
-{
-    m_videoCapture->setImageFilter([](cv::Mat& frame){
-        cv::blur(frame, frame, cv::Size(5,5));
-        cv::cvtColor( frame, frame, cv::COLOR_BGR2GRAY);
-    });
-}
-
-
-void MainWidget::on_filterButton2_clicked()
-{
-    m_videoCapture->setImageFilter([](cv::Mat& frame){
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-        cv::GaussianBlur(frame, frame, cv::Size(5, 5), 1.5);
-        cv::Canny(frame, frame, 100, 200);
-    });
-}
-
 
 void MainWidget::on_resetButton_clicked()
 {
-    m_videoCapture->setImageFilter([](cv::Mat& frame){
+    m_videoCapture.setImageFilter([&](cv::Mat &currentFrame, cv::Mat &previousFrame)
+    {
+        QElapsedTimer timer;
+        timer.start();
+        m_b = true;
+        m_ui->algorythmWorkTime->setText(QString::number(timer.elapsed()) + " ms");
     });
 }
-

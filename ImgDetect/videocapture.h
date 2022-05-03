@@ -3,14 +3,12 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <QThread>
 #include <QPixmap>
 #include <QCamera>
 #include <QImageCapture>
 #include <QMediaDevices>
 #include <QMediaCaptureSession>
 #include <QVideoSink>
-#include <QPointer>
 
 #include <functional>
 
@@ -22,20 +20,21 @@ public:
     VideoCapture(QObject *parent = nullptr, int cameraId = 0);
     ~VideoCapture();
 
-    void setImageFilter(std::function<void(cv::Mat&)> lambda);
+    void setImageFilter(std::function<void(cv::Mat&, cv::Mat&)> lambda);
+    void setVideoOutput(QObject *object);
 
 signals:
-    void newPixmapCaptured(const QPixmap &pixmap);
+    void newPixmapCaptured(QPixmap m_pixmap);
 
 private slots:
     void handleVideoFrames(const QVideoFrame &frame);
 
 private:
-    QPixmap m_pixmap;
-    QVideoSink *m_sink;
+    QImage m_previousFrame;
     QCamera *m_camera;
+    QVideoSink *m_sink;
     QMediaCaptureSession m_captureSession;
-    std::function<void(cv::Mat&)> m_imageFilter;
+    std::function<void(cv::Mat&, cv::Mat&)> m_imageFilter;
 };
 
 #endif // VIDEOCAPTURE_H

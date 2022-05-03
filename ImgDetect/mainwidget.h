@@ -3,6 +3,7 @@
 
 #include <videocapture.h>
 
+#include <QPainter>
 #include <QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -18,13 +19,14 @@ public:
     ~MainWidget();
 
 private slots:
-    void on_filterButton_clicked();
-    void on_filterButton1_clicked();
-    void on_filterButton2_clicked();
+    void onPixmapChanged(QPixmap pixmap);
     void on_resetButton_clicked();
+    void on_trackFeaturePointButton_clicked();
 
 private:
+    bool m_b;
+    cv::Mat m_img;
     Ui::MainWidget *m_ui;
-    VideoCapture *m_videoCapture;
+    VideoCapture m_videoCapture;
 };
 #endif // MAINWIDGET_H

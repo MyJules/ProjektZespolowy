@@ -1,6 +1,7 @@
 #include "videocapture.h"
 
 #include <QDebug>
+#include <QElapsedTimer>
 #include <cvutils.h>
 
 VideoCapture::VideoCapture(QObject *parent, int cameraId)
@@ -10,8 +11,7 @@ VideoCapture::VideoCapture(QObject *parent, int cameraId)
 {
     m_camera = new QCamera(QMediaDevices::defaultVideoInput());
     m_captureSession.setCamera(m_camera);
-    m_captureSession.setVideoSink(m_sink);
-    m_captureSession.
+    m_captureSession.setVideoOutput(m_sink);
 
     connect(m_sink, &QVideoSink::videoFrameChanged, this, &VideoCapture::handleVideoFrames);
     m_camera->start();
@@ -23,20 +23,33 @@ VideoCapture::~VideoCapture()
     delete m_camera;
 }
 
-void VideoCapture::setImageFilter(std::function<void(cv::Mat&)> lambda)
+void VideoCapture::setImageFilter(std::function<void(cv::Mat&, cv::Mat&)> lambda)
 {
     m_imageFilter = lambda;
 }
 
+void VideoCapture::setVideoOutput(QObject *object)
+{
+    m_captureSession.setVideoOutput(object);
+}
+
 void VideoCapture::handleVideoFrames(const QVideoFrame &frame)
 {
-    cv::Mat cvFrame = cvutils::QImageToCvMat(frame.toImage());
+    if(!frame.isValid()) return;
 
-    if(m_imageFilter != nullptr)
+    QImage currentFrame = frame.toImage();
+
+    cv::Mat cvCurrentFrame = cvutils::QImageToCvMat(currentFrame);
+    cv::Mat cvPreviousFrame = cvutils::QImageToCvMat(m_previousFrame);
+
+    if(m_imageFilter != nullptr &&
+            !cvPreviousFrame.empty())
     {
-      m_imageFilter(cvFrame);
+      m_imageFilter(cvCurrentFrame, cvPreviousFrame);
     }
 
-    QPixmap pixmap = cvutils::cvMatToQPixmap(cvFrame);
+    m_previousFrame = currentFrame;
+
+    QPixmap pixmap = cvutils::cvMatToQPixmap(cvCurrentFrame);
     emit newPixmapCaptured(pixmap);
 }

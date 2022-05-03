@@ -2,6 +2,7 @@
 #define CVUTILS_H
 
 #include <QImage>
+#include <QVideoFrame>
 #include <opencv2/opencv.hpp>
 
 namespace cvutils

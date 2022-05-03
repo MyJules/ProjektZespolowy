@@ -8,9 +8,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 
 if(ANDROID)
     set(OpenCV_STATIC ON)
@@ -22,15 +21,13 @@ if(ANDROID)
 
     link_directories(${OPENCV_ANDROID_PATH}/sdk/native/libs/${ANDROID_ARCHITECTURE})
     link_directories(${OPENCV_ANDROID_PATH}/sdk/native/3rdparty/libs/${ANDROID_ARCHITECTURE})
-
-    find_package(OpenCV REQUIRED)
 else()
     include_directories(${OpenCV_INCLUDE_DIRS})
-    find_package(OpenCV REQUIRED)
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Multimedia REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Multimedia REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Multimedia MultimediaWidgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Multimedia MultimediaWidgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -66,7 +63,11 @@ else()
     endif()
 endif()
 
-target_link_libraries(ImgDetect PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
+target_link_libraries(ImgDetect PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Multimedia
+    Qt${QT_VERSION_MAJOR}::MultimediaWidgets
+)
 target_link_libraries(ImgDetect PRIVATE ${OpenCV_LIBS})
 
 if(ANDROID)
