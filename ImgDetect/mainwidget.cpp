@@ -51,7 +51,7 @@ void MainWidget::on_trackFeaturePointButton_clicked()
         cv::Mat img_1 = m_img.clone();
         cv::Mat img_2 = currentFrame.clone();
 
-        auto sift = cv::SIFT::create();
+        auto sift = cv::FastFeatureDetector::create();
         std::vector<cv::KeyPoint> keypoint1, keypoint2;
 
         cv::Mat descriptor1, descriptor2;
