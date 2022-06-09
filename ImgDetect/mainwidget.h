@@ -2,6 +2,7 @@
 #define MAINWIDGET_H
 
 #include <videocapture.h>
+#include <imgdetector.h>
 
 #include <QPainter>
 #include <QWidget>
@@ -24,9 +25,9 @@ private slots:
     void on_trackFeaturePointButton_clicked();
 
 private:
-    bool m_b;
     cv::Mat m_img;
     Ui::MainWidget *m_ui;
+    ImgDetector m_imgDetector;
     VideoCapture m_videoCapture;
 };
 #endif // MAINWIDGET_H

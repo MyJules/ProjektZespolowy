@@ -37,6 +37,8 @@ set(PROJECT_SOURCES
         videocapture.h
         cvutils.cpp
         cvutils.h
+        imgdetector.cpp
+        imgdetector.h
         mainwidget.ui
 )
 
